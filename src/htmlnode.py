@@ -8,7 +8,26 @@ class HTMLNode():
         self.props = props
     
     def to_html(self):
-        raise NotImplementedError
+        if self.tag is None:
+            raise ValueError("Cannot convert to HTML: tag is None")
+        
+        result = f'<{self.tag}'
+        
+        if self.props:
+            for prop, value in self.props.items():
+                result += f' {prop}="{value}"'
+        
+        result += ">"
+        
+        if self.value:
+            result += self.value
+        
+        if self.children:
+            for child in self.children:
+                result += child.to_html()
+        
+        result += f'</{self.tag}>'
+        return result
     
     def props_to_html(self):
         if not self.props:
@@ -34,7 +53,7 @@ class LeafNode(HTMLNode):
         
         
         if not self.value:
-            raise ValueError("All leaf nodes must have a value")
+            return ""
         elif self.tag == None:
             return str(self.value)
         else:
