@@ -1,5 +1,6 @@
 import os
 import shutil
+import sys
 
 from textnode import TextNode, TextType
 from htmlnode import HTMLNode, LeafNode, ParentNode
@@ -25,14 +26,16 @@ def copy_static_dir(static_dir, public_dir):
 
 
 def main():
-        
     
-    copy_static_dir("static", "public")
+    basepath = sys.argv[1] if len(sys.argv) > 1 else "/"
+    
+    copy_static_dir("static", "docs")
     
     generate_pages_recursive(
         "./content",
         "./template.html",
-        "./public"
+        "./docs",
+        basepath
     )
 
     
@@ -42,6 +45,7 @@ def main():
 
 
 if __name__ == "__main__":
-        main()
+    basepath = sys.argv[1] if len(sys.argv) > 1 else "/"
+    main()
     
      
