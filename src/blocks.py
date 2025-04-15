@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from enum import Enum
 from htmlnode import HTMLNode
 from textnode import TextNode, TextType, text_node_to_html_node
@@ -179,46 +180,41 @@ def extract_title(markdown):
     
     raise Exception("No h1 Header found")
 
-def generate_page(from_path, temp_path, dest_path, basepath):
-    with open(from_path) as fp:
-        path_fp = fp.read()
-    with open(temp_path) as tp:
-        temp_tp = tp.read()
-        
-    print(f'Generating page from {from_path} to {dest_path} using {temp_path}')
-    
-    convert_md = markdown_to_html_node(path_fp)
-    next_convert = convert_md.to_html()
-    title = extract_title(path_fp)
-    html_title = temp_tp.replace("{{ Title }}", title)
-    final_html = html_title.replace("{{ Content }}", next_convert)
-    
-    final_html = final_html.replace('href="/', f'href="{basepath}')
-    final_html = final_html.replace('src="/', f'src="{basepath}')
-    
-    os.makedirs(os.path.dirname(dest_path), exist_ok=True)
-    
-    with open(dest_path, "w") as dp:
-        dp.write(final_html)
+def generate_page(from_path, template_path, dest_path, basepath):
+    print(f" * {from_path} {template_path} -> {dest_path}")
+    from_file = open(from_path, "r")
+    markdown_content = from_file.read()
+    from_file.close()
+
+    template_file = open(template_path, "r")
+    template = template_file.read()
+    template_file.close()
+
+    node = markdown_to_html_node(markdown_content)
+    html = node.to_html()
+
+    title = extract_title(markdown_content)
+    template = template.replace("{{ Title }}", title)
+    template = template.replace("{{ Content }}", html)
+    template = template.replace('href="/', 'href="' + basepath)
+    template = template.replace('src="/', 'src="' + basepath)
+
+    dest_dir_path = os.path.dirname(dest_path)
+    if dest_dir_path != "":
+        os.makedirs(dest_dir_path, exist_ok=True)
+    to_file = open(dest_path, "w")
+    to_file.write(template)
     
     
 def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, basepath):
-    all_content = os.listdir(dir_path_content)
-    
-    for item in all_content:
-        item_path = os.path.join(dir_path_content, item)
-        
-        if os.path.isfile(item_path) and item.endswith('.md'):
-            rel_path = os.path.relpath(item_path, dir_path_content)
-            dest_file_path = os.path.join(dest_dir_path, rel_path.replace('.md', '.html'))
-            os.makedirs(os.path.dirname(dest_file_path), exist_ok= True)
-            generate_page(item_path, template_path, dest_file_path, basepath)
+    for filename in os.listdir(dir_path_content):
+        from_path = os.path.join(dir_path_content, filename)
+        dest_path = os.path.join(dest_dir_path, filename)
+        if os.path.isfile(from_path):
+            dest_path = Path(dest_path).with_suffix(".html")
+            generate_page(from_path, template_path, dest_path, basepath)
         else:
-            rel_dir_path = os.path.relpath(item_path, dir_path_content)
-            new_dest_dir = os.path.join(dest_dir_path, rel_dir_path)
-                
-            generate_pages_recursive(item_path, template_path, new_dest_dir, basepath)
-    
+            generate_pages_recursive(from_path, template_path, dest_path, basepath)
     
                 
             
