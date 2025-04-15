@@ -1,3 +1,4 @@
+import os
 from enum import Enum
 from htmlnode import HTMLNode
 from textnode import TextNode, TextType, text_node_to_html_node
@@ -192,12 +193,29 @@ def generate_page(from_path, temp_path, dest_path):
     html_title = temp_tp.replace("{{ Title }}", title)
     final_html = html_title.replace("{{ Content }}", next_convert)
     
-    import os
+    
     os.makedirs(os.path.dirname(dest_path), exist_ok=True)
     
     with open(dest_path, "w") as dp:
         dp.write(final_html)
     
+    
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+    all_content = os.listdir(dir_path_content)
+    
+    for item in all_content:
+        item_path = os.path.join(dir_path_content, item)
+        
+        if os.path.isfile(item_path) and item.endswith('.md'):
+            rel_path = os.path.relpath(item_path, dir_path_content)
+            dest_file_path = os.path.join(dest_dir_path, rel_path.replace('.md', '.html'))
+            os.makedirs(os.path.dirname(dest_file_path), exist_ok= True)
+            generate_page(item_path, template_path, dest_file_path)
+        else:
+            rel_dir_path = os.path.relpath(item_path, dir_path_content)
+            new_dest_dir = os.path.join(dest_dir_path, rel_dir_path)
+                
+            generate_pages_recursive(item_path, template_path, new_dest_dir)
     
     
                 

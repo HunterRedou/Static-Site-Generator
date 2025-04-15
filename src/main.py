@@ -3,7 +3,7 @@ import shutil
 
 from textnode import TextNode, TextType
 from htmlnode import HTMLNode, LeafNode, ParentNode
-from blocks import generate_page
+from blocks import generate_page, generate_pages_recursive
 
 
 def copy_static_dir(static_dir, public_dir):
@@ -29,10 +29,10 @@ def main():
     
     copy_static_dir("static", "public")
     
-    generate_page(
-        "content/index.md",
-        "template.html",
-        "public/index.html"
+    generate_pages_recursive(
+        "./content",
+        "./template.html",
+        "./public"
     )
 
     
